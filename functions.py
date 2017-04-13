@@ -78,4 +78,23 @@ def area(img):
 
     return nonzero, (nonzero/float(totalarea))
 
+def removeNoise(img):
+    for x in range(img.shape[0]):
+        for y in range(img.shape[1]):
+            if img[x,y]<14:
+                img[x,y]=0
+    return img
+
+
+def stentMask(img):
+    mean = np.mean(img)
+    output = img*0
+    for x in range(img.shape[0]):
+        if np.mean(img[x,:])< (mean*0.5):
+            output[x,:]=255
+
+    return output
+
+
+
 

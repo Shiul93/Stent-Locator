@@ -7,7 +7,7 @@ import cv2
 print 'Loading numpy'
 
 import numpy as np
-from functions import removeThings,removeCenter,circle_levelset,area
+from functions import removeThings,removeCenter,circle_levelset,area,removeNoise,stentMask
 
 
 import argparse
@@ -104,6 +104,16 @@ cv2.circle(image,center,radius,255,cv2.FILLED)
 circularity = (len(np.nonzero(mask)[0])/float(len(np.nonzero(image)[0])))
 
 print bcolors.OKBLUE+'Aorta circularity: '+str(circularity)+bcolors.ENDC
+print bcolors.OKBLUE+'Aorta radius: '+str(radius)+bcolors.ENDC
 
+cv2.waitKey(3000)
+
+
+polar = cv2.linearPolar(imbw,center,526/2,cv2.INTER_NEAREST)
+
+cv2.imshow('window',polar)
+cv2.imshow('window-no-noise',removeNoise(polar))
 cv2.waitKey(0)
 
+cv2.imshow('window',stentMask(removeNoise(polar)))
+cv2.waitKey(0)
