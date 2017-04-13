@@ -95,6 +95,10 @@ def stentMask(img):
 
     return output
 
+def shiftImage(img, pixels):
+    output = img*1
+    output[:,pixels:]= img[:,:-pixels]
+    return output
 
 
 

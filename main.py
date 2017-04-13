@@ -7,7 +7,7 @@ import cv2
 print 'Loading numpy'
 
 import numpy as np
-from functions import removeThings,removeCenter,circle_levelset,area,removeNoise,stentMask
+from functions import removeThings,removeCenter,circle_levelset,area,removeNoise,stentMask,shiftImage
 
 
 import argparse
@@ -86,7 +86,7 @@ cv2.drawContours(image, [cnt], -1, 255, 1)
 cv2.circle(image, (cX, cY), 2, (255, 255, 255), -1)
 cv2.putText(image, "center", (cX - 20, cY - 20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 cv2.imshow("window", image)
-cv2.waitKey(3000)
+cv2.waitKey(1000)
 
 image = imbw*1
 
@@ -96,7 +96,7 @@ center = (int(x),int(y))
 radius = int(radius)
 cv2.circle(image,center,radius,255,2)
 cv2.imshow('window',image)
-cv2.waitKey(2000)
+cv2.waitKey(1000)
 
 image = imbw*0
 cv2.circle(image,center,radius,255,cv2.FILLED)
@@ -106,14 +106,41 @@ circularity = (len(np.nonzero(mask)[0])/float(len(np.nonzero(image)[0])))
 print bcolors.OKBLUE+'Aorta circularity: '+str(circularity)+bcolors.ENDC
 print bcolors.OKBLUE+'Aorta radius: '+str(radius)+bcolors.ENDC
 
-cv2.waitKey(3000)
+
+x,y,w,h = cv2.boundingRect(cnt)
+print bcolors.OKBLUE+'Aorta aspect ratio: '+str(w)+':'+str(h)+bcolors.ENDC
+
+
+cv2.waitKey(1000)
 
 
 polar = cv2.linearPolar(imbw,center,526/2,cv2.INTER_NEAREST)
-
+polarmask = cv2.linearPolar(mask,center,526/2,cv2.INTER_NEAREST)
+polar = removeNoise(polar)
 cv2.imshow('window',polar)
-cv2.imshow('window-no-noise',removeNoise(polar))
-cv2.waitKey(0)
+cv2.waitKey(1000)
+cv2.imshow('window',polarmask)
+cv2.waitKey(1000)
 
-cv2.imshow('window',stentMask(removeNoise(polar)))
+
+smask = stentMask(polar)
+cv2.imshow('window',smask)
+cv2.waitKey(1000)
+
+ret,thresh = cv2.threshold(polar,40,255,cv2.THRESH_BINARY)
+cv2.imshow('window', thresh)
+cv2.waitKey(1000)
+
+
+stents = (thresh/255 * smask/255)*255
+cv2.imshow('window', stents)
+cv2.waitKey(1000)
+
+
+
+stents = (stents/255*(shiftImage(polarmask,15)/255))*255
+cv2.imshow('window', stents)
+cv2.waitKey(1000)
+
+cv2.imshow("window", cv2.addWeighted(polar,0.5,stents,0.5,0.0))
 cv2.waitKey(0)

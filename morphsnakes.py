@@ -260,21 +260,22 @@ def evolve(msnake, levelset=None, num_iters=20, animate = False, background = No
         progressbar.progress(i,num_iters-1,"")
 
         if animate:
+            if (i+1)%1==0:
 
-            if background is not None:
-                snek = msnake.levelset
-                kernel = np.ones((3,3))
-                erosion = cv2.erode(snek, kernel)
+                if background is not None:
+                    snek = msnake.levelset
+                    kernel = np.ones((3,3))
+                    erosion = cv2.erode(snek, kernel)
 
-                edges =(snek-erosion).astype(np.uint8)*255
-                cv2.putText(edges, 'Evolving, iteration: '+str(i+1), (20, 20),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255, 1)
-                cv2.imshow("window", cv2.addWeighted(background,0.7,edges,0.3,0.0))
+                    edges =(snek-erosion).astype(np.uint8)*255
+                    cv2.putText(edges, 'Evolving, iteration: '+str(i+1), (20, 20),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255, 1)
+                    cv2.imshow("window", cv2.addWeighted(background,0.7,edges,0.3,0.0))
 
-            else:
+                else:
 
-                cv2.imshow("window",msnake.levelset)
-            cv2.waitKey(1)
+                    cv2.imshow("window",msnake.levelset)
+                cv2.waitKey(1)
 
 
     # Return the last levelset.
