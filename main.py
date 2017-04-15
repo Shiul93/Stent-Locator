@@ -54,7 +54,7 @@ radius = 50
 
 img = imbw/255.0
 gI = morphsnakes.gborders(img, alpha=3000, sigma=5.48)
-mgac = morphsnakes.MorphGAC(gI, smoothing=1, threshold=0.31, balloon=1)
+mgac = morphsnakes.MorphGAC(gI, smoothing=1, threshold=0.31, balloon=0.8)
 mgac.levelset = circle_levelset(img.shape, (centery,centerx), radius)
 
 mask, edges = morphsnakes.evolve(mgac, num_iters=170, animate=True, background=imbw)
@@ -128,8 +128,6 @@ polar = cv2.linearPolar(imbw,center,526/2,cv2.INTER_NEAREST)
 polarmask = cv2.linearPolar(mask,center,526/2,cv2.INTER_NEAREST)
 #polar = img2polar(imbw,center,526/2,526/2)
 
-print 'Polar: '+ str(polar.shape)
-print 'Original: '+str(imbw.shape)
 polar = removeNoise(polar)
 cv2.imshow('window',polar)
 cv2.waitKey(500)
@@ -166,6 +164,14 @@ kernel5 = np.ones((5, 5))
 
 dilated = cv2.dilate(new, kernel5)
 new = cv2.erode(dilated, kernel5)
+
+
+
+circleclean = new * 0
+
+circleclean = cv2.circle(circleclean,center,radius+10,1,cv2.FILLED)
+
+new = new*circleclean
 
 cv2.imshow("window", cv2.addWeighted(imbw,0.5,new,0.5,0.0))
 cv2.waitKey(500)
@@ -252,3 +258,5 @@ cv2.putText(im_with_keypoints, 'Struts > 15px', (575,40), cv2.FONT_HERSHEY_SIMPL
 cv2.putText(im_with_keypoints, 'Aorta wall', (575,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,60,255), 1)
 cv2.imshow("results",im_with_keypoints)
 cv2.waitKey(0)
+
+print input_path+','+str(round(results_totalarea,4))+','+str(round(results_pixelarea,4))+','+str(round(results_circularity,4))+','+str(results_radius)+','+results_aspectratio
