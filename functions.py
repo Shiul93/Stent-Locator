@@ -90,7 +90,7 @@ def stentMask(img):
     mean = np.mean(img)
     output = img*0
     for x in range(img.shape[0]):
-        if np.mean(img[x,:])< (mean*0.5):
+        if np.mean(img[x,:])< (mean*0.4):
             output[x,:]=255
 
     return output
@@ -102,3 +102,45 @@ def shiftImage(img, pixels):
 
 
 
+def polar2cart(r, theta, center):
+
+    x = r  * np.cos(theta) + center[0]
+    y = r  * np.sin(theta) + center[1]
+    return x, y
+
+def img2polar(img, center, final_radius, initial_radius = None, phase_width = 3000):
+
+    if initial_radius is None:
+        initial_radius = 0
+
+    theta , R = np.meshgrid(np.linspace(0, 2*np.pi, phase_width),
+                            np.arange(initial_radius, final_radius))
+
+    Xcart, Ycart = polar2cart(R, theta, center)
+
+    Xcart = Xcart.astype(int)
+    Ycart = Ycart.astype(int)
+
+    if img.ndim ==3:
+        polar_img = img[Ycart,Xcart,:]
+        polar_img = np.reshape(polar_img,(final_radius-initial_radius,phase_width,3))
+    else:
+        polar_img = img[Ycart,Xcart]
+        polar_img = np.reshape(polar_img,(final_radius-initial_radius,phase_width))
+
+    return polar_img
+
+
+def cartMask(polarmask, center):
+    print str(center)
+    out = polarmask*0
+    nz = np.nonzero(polarmask)
+    r,theta = nz
+
+    scalefactor = len(theta)
+    for i in range(len(r)):
+        (x,y) = polar2cart(r[i],(theta[i]/float(scalefactor))*360,center)
+        if x < out.shape[0]:
+            if y < out.shape[1]:
+                out[x.astype(int),y.astype(int)]=255
+    return out
