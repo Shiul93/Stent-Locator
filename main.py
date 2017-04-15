@@ -66,6 +66,9 @@ area(mask)
 
 pixelarea, totalarea = area(mask)
 
+results_pixelarea = pixelarea
+results_totalarea = totalarea
+
 print bcolors.OKBLUE+'Total area occuppied by aorta section: '+str(totalarea)+bcolors.ENDC
 print bcolors.OKBLUE+'Number of pixels of the aorta section: '+str(pixelarea)+bcolors.ENDC
 
@@ -84,6 +87,9 @@ cY = int(M["m01"] / M["m00"])
 image = imbw*1
 cv2.drawContours(image, [cnt], -1, 255, 1)
 cv2.circle(image, (cX, cY), 2, (255, 255, 255), -1)
+
+results_edge = [cnt]
+
 cv2.putText(image, "center", (cX - 20, cY - 20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 cv2.imshow("window", image)
 cv2.waitKey(500)
@@ -106,9 +112,13 @@ circularity = (len(np.nonzero(mask)[0])/float(len(np.nonzero(image)[0])))
 print bcolors.OKBLUE+'Aorta circularity: '+str(circularity)+bcolors.ENDC
 print bcolors.OKBLUE+'Aorta radius: '+str(radius)+bcolors.ENDC
 
+results_circularity = circularity
+results_radius = radius
 
 x,y,w,h = cv2.boundingRect(cnt)
 print bcolors.OKBLUE+'Aorta aspect ratio: '+str(w)+':'+str(h)+bcolors.ENDC
+
+results_aspectratio = str(w)+':'+str(h)
 
 
 cv2.waitKey(500)
@@ -149,7 +159,96 @@ cv2.waitKey(500)
 cv2.imshow("window", cv2.addWeighted(polar,0.5,stents,0.5,0.0))
 cv2.waitKey(500)
 
-new = cv2.linearPolar(stents,center,526/2,flags = (cv2.WARP_INVERSE_MAP))
+new = cv2.linearPolar(stents,center,526/2,flags = ( cv2.WARP_INVERSE_MAP))
+
+kernel3 = np.ones((3, 3))
+kernel5 = np.ones((5, 5))
+
+dilated = cv2.dilate(new, kernel5)
+new = cv2.erode(dilated, kernel5)
 
 cv2.imshow("window", cv2.addWeighted(imbw,0.5,new,0.5,0.0))
+cv2.waitKey(500)
+
+
+
+params = cv2.SimpleBlobDetector_Params()
+# Change thresholds
+params.minThreshold = 127
+params.maxThreshold = 255
+params.blobColor =255
+
+
+# Filter by Area.
+params.filterByArea = True
+params.minArea = 0
+
+# Filter by Circularity
+params.filterByCircularity = False
+
+
+# Filter by Convexity
+params.filterByConvexity = False
+
+
+# Filter by Inertia
+params.filterByInertia = False
+
+detector = cv2.SimpleBlobDetector_create(params)
+
+# Detect blobs.
+keypoints = detector.detect(new)
+im = cv2.cvtColor(imbw,cv2.COLOR_GRAY2BGR)
+
+im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0, 0, 255),
+                                      cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+
+
+
+params = cv2.SimpleBlobDetector_Params()
+# Change thresholds
+params.minThreshold = 230
+params.maxThreshold = 255
+params.blobColor =255
+
+
+# Filter by Area.
+params.filterByArea = True
+params.minArea = 15
+
+# Filter by Circularity
+params.filterByCircularity = False
+
+
+# Filter by Convexity
+params.filterByConvexity = False
+
+
+# Filter by Inertia
+params.filterByInertia = False
+
+detector = cv2.SimpleBlobDetector_create(params)
+
+# Detect blobs.
+keypoints = detector.detect(new)
+
+im_with_keypoints = cv2.drawKeypoints(im_with_keypoints, keypoints, np.array([]), (0, 255, 0),
+                                      cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+
+# Show keypoints
+
+
+im_with_keypoints = cv2.drawContours(im_with_keypoints,results_edge,-1,(255,60,255))
+
+
+cv2.putText(im_with_keypoints, 'Area: '+str(round(results_totalarea,4)), (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,0), 1)
+cv2.putText(im_with_keypoints, 'Circularity: '+str(round(results_circularity,4)), (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,0), 1)
+cv2.putText(im_with_keypoints, 'Radius: '+str(results_radius), (20,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,0), 1)
+cv2.putText(im_with_keypoints, 'Aspect ratio: '+results_aspectratio, (20,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,0), 1)
+cv2.putText(im_with_keypoints, 'Struts < 15px', (575,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+cv2.putText(im_with_keypoints, 'Struts > 15px', (575,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
+cv2.putText(im_with_keypoints, 'Aorta wall', (575,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,60,255), 1)
+cv2.imshow("results",im_with_keypoints)
 cv2.waitKey(0)

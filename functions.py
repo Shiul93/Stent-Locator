@@ -90,10 +90,11 @@ def stentMask(img):
     mean = np.mean(img)
     output = img*0
     for x in range(img.shape[0]):
-        if np.mean(img[x,:])< (mean*0.4):
-            output[x,:]=255
+        if np.mean(img[x,:])< (mean*0.5):
+            output[x,:]=1
 
-    return output
+
+    return output*255
 
 def shiftImage(img, pixels):
     output = img*1
